@@ -90,7 +90,7 @@ public class SlideBackHelper {
             }
 
             @Override
-            public void onClose(Boolean finishActivity) {
+            public void onClose(boolean finishActivity) {
 
                 // finishActivity为true时关闭页面，为false时不关闭页面，为null时为其他地方关闭页面时调用SlideBackLayout.isComingToFinish的回调
 
@@ -98,13 +98,9 @@ public class SlideBackHelper {
                     listener.onClose();
                 }
 
-                if ((finishActivity == null || !finishActivity) && listener != null) {
-                    listener.onClose();
-                }
-
                 if (config != null && config.isRotateScreen()) {
 
-                    if (finishActivity != null && finishActivity) {
+                    if (finishActivity) {
                         // remove了preContentView后布局会重新调整，这时候contentView回到原处，所以要设不可见
                         contentView.setVisibility(View.INVISIBLE);
                     }
@@ -115,16 +111,13 @@ public class SlideBackHelper {
                         ((ViewGroup) preContentView[0].getParent()).removeView(preContentView[0]);
                         getDecorView(preActivity[0]).addView(preContentView[0], 0);
                     }
-                    //else {
-                    // Log.e("TAG", "这个页面你都没加过，还是在上一个那里，你没欠我");
-                    //}
                 }
 
-                if (finishActivity != null && finishActivity) {
+                if (finishActivity) {
                     curActivity.finish();
                     curActivity.overridePendingTransition(0, R.anim.anim);
                     helper.postRemoveActivity(curActivity);
-                } else if (finishActivity == null) {
+                } else {
                     helper.postRemoveActivity(curActivity);
                 }
             }

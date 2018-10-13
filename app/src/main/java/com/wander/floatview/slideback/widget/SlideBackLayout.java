@@ -58,6 +58,10 @@ public class SlideBackLayout extends FrameLayout {
 
     private float mSlidDistantX;
 
+    /**
+     * 支持屏幕滑动
+     * 则会直接操作上个布局的view，后续需要回归
+     */
     private boolean mRotateScreen;
 
     private boolean mCloseFlagForWindowFocus;
@@ -222,13 +226,9 @@ public class SlideBackLayout extends FrameLayout {
         if (mRotateScreen) {
             mCloseFlagForDetached = true;
             mCloseFlagForWindowFocus = false;
-            mOnInternalStateListener.onClose(null);
+            mOnInternalStateListener.onClose(false);
             mPreContentView.setX(0);
         }
-    }
-
-    public String getTestName() {
-        return mTestName;
     }
 
     public void updatePreContentView(View contentView) {
