@@ -56,22 +56,29 @@ class DragLayout @JvmOverloads constructor(context: Context, attrs: AttributeSet
 
     override fun onSizeChanged(w: Int, h: Int, oldw: Int, oldh: Int) {
         super.onSizeChanged(w, h, oldw, oldh)
-        Log.d(tag,"height:$height")
+        Log.d(tag, "height:$height")
         viewHeight = height
     }
 
     override fun onLayout(changed: Boolean, left: Int, top: Int, right: Int, bottom: Int) {
         super.onLayout(changed, left, top, right, bottom)
-        Log.d(tag,"orgY:${contentView.top}")
+        Log.d(tag, "orgY:${contentView.top}")
         orgContentY = contentView.top
     }
 
     @SuppressLint("ClickableViewAccessibility")
     override fun onTouchEvent(event: MotionEvent): Boolean {
-        if (!lock){
+        if (!lock) {
             mDragHelper.processTouchEvent(event)
+            return true
         }
         return super.onTouchEvent(event)
+    }
+
+    override fun computeScroll() {
+        if (mDragHelper.continueSettling(true)) {
+            invalidate()
+        }
     }
 
     override fun onInterceptTouchEvent(event: MotionEvent): Boolean {
@@ -85,7 +92,7 @@ class DragLayout @JvmOverloads constructor(context: Context, attrs: AttributeSet
                 if (Math.abs(event.y - mDownY) < hoverSlidDistance) {
                     return false
                 }
-                if (event.x - mDownX > hoverSlidDistance) {
+                if (Math.abs(event.x - mDownX) > hoverSlidDistance) {
                     return false
                 }
             }
@@ -106,7 +113,8 @@ class DragLayout @JvmOverloads constructor(context: Context, attrs: AttributeSet
         }
 
         override fun clampViewPositionVertical(child: View, top: Int, dy: Int): Int {
-            return Math.max(Math.min(dy, viewHeight), 0)
+            Log.d(tag,"clampViewPositionVertical dy$dy   top:$top")
+            return Math.max(Math.min(top, viewHeight), 0)
         }
 
         override fun getViewVerticalDragRange(child: View): Int {
@@ -116,7 +124,7 @@ class DragLayout @JvmOverloads constructor(context: Context, attrs: AttributeSet
         override fun onViewReleased(releasedChild: View, xvel: Float, yvel: Float) {
             Log.d(tag, "yvel$yvel")
             if (releasedChild == contentView) {
-                if (yvel > slideOutVelocity) {
+                if (Math.abs(yvel) > slideOutVelocity) {
                     mDragHelper.settleCapturedViewAt(0, viewHeight)
                     invalidate()
                 }
@@ -132,10 +140,23 @@ class DragLayout @JvmOverloads constructor(context: Context, attrs: AttributeSet
         }
 
         override fun onViewDragStateChanged(state: Int) {
+            when (state) {
+                ViewDragHelper.STATE_IDLE -> {
+                    if (contentView.top == viewHeight) {
+                        Log.d(tag, "close")
+                    } else if (contentView.top == 0) {
+                        Log.d(tag, "open")
+                    }
+
+                }
+                else -> {
+                }
+            }
         }
 
         override fun onViewPositionChanged(changedView: View, left: Int, top: Int, dx: Int, dy: Int) {
-
+            val percent = top * 1.0f / viewHeight
+            Log.e(tag, "percent$percent")
         }
 
 
