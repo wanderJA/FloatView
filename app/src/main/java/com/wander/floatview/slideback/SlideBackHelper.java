@@ -21,6 +21,9 @@ import com.wander.floatview.slideback.widget.SlideBackLayout;
 public class SlideBackHelper {
 
     private static ViewGroup getDecorView(Activity activity) {
+        if (activity == null){
+            return   null;
+        }
         return (ViewGroup) activity.getWindow().getDecorView();
     }
 
