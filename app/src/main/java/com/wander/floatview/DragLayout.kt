@@ -7,16 +7,13 @@ import android.util.AttributeSet
 import android.util.Log
 import android.view.MotionEvent
 import android.view.View
-import android.view.ViewConfiguration
 import android.view.ViewGroup
 import android.widget.FrameLayout
-import java.lang.IllegalArgumentException
-import kotlin.math.log
 
 /**
  * author wander
  * date 2018/10/15
- *
+ * 仅适配竖向屏幕向下滑动，不支持屏幕旋转
  */
 class DragLayout @JvmOverloads constructor(context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0) :
     FrameLayout(context, attrs, defStyleAttr) {
@@ -40,6 +37,7 @@ class DragLayout @JvmOverloads constructor(context: Context, attrs: AttributeSet
     var slideOutRangePercent = 0.2f
     private var slideOutRange = 200f
     private val mDragHelper = ViewDragHelper.create(this, 1.0f, MyDragCallback())
+    var dragStateListener: DragStateListener? = null
 
     init {
 
@@ -49,9 +47,15 @@ class DragLayout @JvmOverloads constructor(context: Context, attrs: AttributeSet
         super.onFinishInflate()
         if (childCount > 0) {
             contentView = getChildAt(0)
+            contentView.top = 0
         } else {
             throw IllegalArgumentException("need one direct child")
         }
+    }
+
+    fun dismiss() {
+        dragStateListener?.onClose()
+        contentView.top = 0
     }
 
     override fun onSizeChanged(w: Int, h: Int, oldw: Int, oldh: Int) {
@@ -113,7 +117,7 @@ class DragLayout @JvmOverloads constructor(context: Context, attrs: AttributeSet
         }
 
         override fun clampViewPositionVertical(child: View, top: Int, dy: Int): Int {
-            Log.d(tag,"clampViewPositionVertical dy$dy   top:$top")
+            Log.d(tag, "clampViewPositionVertical dy$dy   top:$top")
             return Math.max(Math.min(top, viewHeight), 0)
         }
 
@@ -122,7 +126,6 @@ class DragLayout @JvmOverloads constructor(context: Context, attrs: AttributeSet
         }
 
         override fun onViewReleased(releasedChild: View, xvel: Float, yvel: Float) {
-            Log.d(tag, "yvel$yvel")
             if (releasedChild == contentView) {
                 if (Math.abs(yvel) > slideOutVelocity) {
                     mDragHelper.settleCapturedViewAt(0, viewHeight)
@@ -135,7 +138,6 @@ class DragLayout @JvmOverloads constructor(context: Context, attrs: AttributeSet
                     mDragHelper.settleCapturedViewAt(0, viewHeight)
                 }
                 invalidate()
-
             }
         }
 
@@ -143,9 +145,12 @@ class DragLayout @JvmOverloads constructor(context: Context, attrs: AttributeSet
             when (state) {
                 ViewDragHelper.STATE_IDLE -> {
                     if (contentView.top == viewHeight) {
+                        dragStateListener?.onClose()
                         Log.d(tag, "close")
                     } else if (contentView.top == 0) {
                         Log.d(tag, "open")
+                        dragStateListener?.onOpen()
+
                     }
 
                 }
@@ -156,7 +161,8 @@ class DragLayout @JvmOverloads constructor(context: Context, attrs: AttributeSet
 
         override fun onViewPositionChanged(changedView: View, left: Int, top: Int, dx: Int, dy: Int) {
             val percent = top * 1.0f / viewHeight
-            Log.e(tag, "percent$percent")
+            Log.d(tag,"percent$percent")
+            dragStateListener?.onDrag(percent)
         }
 
 
